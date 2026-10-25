@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HomeRouteImport } from './routes/_home'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
-import { Route as homeIndexRouteImport } from './routes/(home)/index'
+import { Route as HomeIndexRouteImport } from './routes/_home/index'
+import { Route as HomeWoiiRouteImport } from './routes/_home/woii'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const HomeRoute = HomeRouteImport.update({
+  id: '/_home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authLoginRoute = authLoginRouteImport.update({
   id: '/(auth)/login',
   path: '/login',
@@ -24,10 +30,15 @@ const authRegisterRoute = authRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const homeIndexRoute = homeIndexRouteImport.update({
-  id: '/(home)/',
+const HomeIndexRoute = HomeIndexRouteImport.update({
+  id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeWoiiRoute = HomeWoiiRouteImport.update({
+  id: '/woii',
+  path: '/woii',
+  getParentRoute: () => HomeRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -36,46 +47,59 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof HomeIndexRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
-  '/': typeof homeIndexRoute
+  '/woii': typeof HomeWoiiRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
-  '/': typeof homeIndexRoute
+  '/woii': typeof HomeWoiiRoute
+  '/': typeof HomeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_home': typeof HomeRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
-  '/(home)/': typeof homeIndexRoute
+  '/_home/woii': typeof HomeWoiiRoute
+  '/_home/': typeof HomeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/register' | '/' | '/api/auth/$'
+  fullPaths: '/' | '/login' | '/register' | '/woii' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/' | '/api/auth/$'
+  to: '/login' | '/register' | '/woii' | '/' | '/api/auth/$'
   id:
     | '__root__'
+    | '/_home'
     | '/(auth)/login'
     | '/(auth)/register'
-    | '/(home)/'
+    | '/_home/woii'
+    | '/_home/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  HomeRoute: typeof HomeRouteWithChildren
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
-  homeIndexRoute: typeof homeIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_home': {
+      id: '/_home'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/login': {
       id: '/(auth)/login'
       path: '/login'
@@ -90,12 +114,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(home)/': {
-      id: '/(home)/'
+    '/_home/': {
+      id: '/_home/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof homeIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/_home/woii': {
+      id: '/_home/woii'
+      path: '/woii'
+      fullPath: '/woii'
+      preLoaderRoute: typeof HomeWoiiRouteImport
+      parentRoute: typeof HomeRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -107,10 +138,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface HomeRouteChildren {
+  HomeWoiiRoute: typeof HomeWoiiRoute
+  HomeIndexRoute: typeof HomeIndexRoute
+}
+
+const HomeRouteChildren: HomeRouteChildren = {
+  HomeWoiiRoute: HomeWoiiRoute,
+  HomeIndexRoute: HomeIndexRoute,
+}
+
+const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
+  HomeRoute: HomeRouteWithChildren,
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
-  homeIndexRoute: homeIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

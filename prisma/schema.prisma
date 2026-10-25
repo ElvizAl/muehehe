@@ -12,6 +12,31 @@ enum Role {
   ADMIN
 }
 
+enum CatSex {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum NeuterStatus {
+  NEUTERED
+  NOT_NEUTERED
+  UNKNOWN
+}
+
+enum VaccinationStatus {
+  COMPLETE
+  PARTIAL
+  NOT_VACCINATED
+  UNKNOWN
+}
+
+enum LivingEnvironment {
+  INDOOR
+  OUTDOOR
+  MIXED
+  UNKNOWN
+}
 
 model User {
   id        String   @id @default(uuid())
@@ -26,9 +51,10 @@ model User {
   banned        Boolean?
   banReason     String?
   banExpires    DateTime?
+  cats          Cat[]
 
-  sessions  Session[]
-  accounts  Account[]
+  sessions Session[]
+  accounts Account[]
 
   @@map("users")
 }
@@ -81,4 +107,30 @@ model Verification {
   expiresAt  DateTime
 
   @@map("verifications")
+}
+
+model Cat {
+  id     String @id @default(cuid())
+  userId String
+
+  name              String
+  breed             String?
+  ageYears          Int?
+  ageMonths         Int?
+  ageRecordedAt     DateTime          @default(now())
+  isAgeEstimated    Boolean           @default(false)
+  sex               CatSex            @default(UNKNOWN)
+  weightKg          Decimal?          @db.Decimal(5, 2)
+  neuterStatus      NeuterStatus      @default(UNKNOWN)
+  vaccinationStatus VaccinationStatus @default(UNKNOWN)
+  livingEnvironment LivingEnvironment @default(UNKNOWN)
+  healthHistory     String?           @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("cats")
 }

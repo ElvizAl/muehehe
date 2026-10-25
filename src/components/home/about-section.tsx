@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 export function AboutSection() {
 	return (
 		<section
-			className="grid gap-3 py-[55px] md:grid-cols-2 md:gap-[45px] md:py-[88px] lg:gap-[95px] [&_p]:mb-4 [&_p]:text-[13px] [&_p]:leading-[1.9] [&_p]:text-[#737a70] [&_a]:mt-2.5 mx-auto w-[calc(100%-40px)] max-w-[1180px] md:w-[calc(100%-48px)] lg:w-[calc(100%-80px)]"
+			className="grid gap-3 py-13.75 md:grid-cols-2 md:gap-11.25 md:py-22 lg:gap-23.75 [&_p]:mb-4 [&_p]:text-[13px] [&_p]:leading-[1.9] [&_p]:text-[#737a70] [&_a]:mt-2.5 mx-auto w-[calc(100%-40px)] max-w-295 md:w-[calc(100%-48px)] lg:w-[calc(100%-80px)]"
 			id="tentang"
 		>
 			<div>
