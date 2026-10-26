@@ -114,7 +114,7 @@ export function LandingHeader() {
                     </p>
                   </div>
                   <DropdownMenu.LinkItem
-                    href="/#demo"
+                    href="/chat"
                     closeOnClick
                     className={itemClass}
                   >
