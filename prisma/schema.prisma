@@ -29,6 +29,7 @@ model User {
 
   sessions Session[]
   accounts Account[]
+  consultations Consultation[]
 
   @@map("users")
 }
@@ -98,6 +99,27 @@ model Cat {
   updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+  consultations Consultation[]
+}
+
+model Consultation {
+  id              String   @id @default(cuid())
+  userId          String
+  catId           String
+  sessionId       String
+  symptoms        String
+  assessment      String
+  urgency         String
+  recommendation  String
+  sources         Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cat  Cat  @relation(fields: [catId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+  @@index([userId, createdAt])
 }
 
 model AgentMemorySession {
