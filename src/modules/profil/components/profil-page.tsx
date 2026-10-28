@@ -11,6 +11,7 @@ import {
   Trash2,
   Loader2,
   ArrowLeft,
+  ClipboardList,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Input } from '#/components/ui/input'
@@ -146,12 +147,20 @@ export function ProfilPage({
             </p>
           </div>
           {profil && !editing && (
-            <Button
-              onClick={startEditing}
-              className="h-11 rounded-xl bg-[#284f3d] px-5 text-white"
-            >
-              <Pencil size={16} /> Edit profil
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/hasil-konsultasi"
+                className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#dce1d4] bg-white px-5 text-sm text-[#284f3d] hover:bg-[#edf0e7]"
+              >
+                <ClipboardList size={16} /> Hasil konsultasi
+              </Link>
+              <Button
+                onClick={startEditing}
+                className="h-11 rounded-xl bg-[#284f3d] px-5 text-white"
+              >
+                <Pencil size={16} /> Edit profil
+              </Button>
+            </div>
           )}
         </div>
         {actionError && (

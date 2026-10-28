@@ -8,6 +8,7 @@ import {
   ChevronDown,
   MessageCircle,
   Cat,
+  ClipboardList,
   LogOut,
   Loader2,
 } from 'lucide-react'
@@ -22,7 +23,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '#/components/ui/sheet'
-import { authClient } from '#/modules/auth/auth.client'
+import { authClient } from '#/modules/auth/auth-browser'
 
 export function LandingHeader() {
   const { data: session, isPending } = authClient.useSession()
@@ -126,6 +127,13 @@ export function LandingHeader() {
                     className={itemClass}
                   >
                     <Cat size={17} /> Profil
+                  </DropdownMenu.LinkItem>
+                  <DropdownMenu.LinkItem
+                    render={<Link to="/hasil-konsultasi" />}
+                    closeOnClick
+                    className={itemClass}
+                  >
+                    <ClipboardList size={17} /> Hasil konsultasi
                   </DropdownMenu.LinkItem>
                   <DropdownMenu.Item
                     disabled={signingOut}

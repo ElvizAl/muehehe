@@ -14,8 +14,10 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as HomeIndexRouteImport } from './routes/_home/index'
+import { Route as HomeHasilKonsultasiRouteImport } from './routes/_home/hasil-konsultasi'
 import { Route as HomeProfilRouteImport } from './routes/_home/profil'
 import { Route as HomeWoiiRouteImport } from './routes/_home/woii'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const HomeRoute = HomeRouteImport.update({
@@ -42,6 +44,11 @@ const HomeIndexRoute = HomeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => HomeRoute,
 } as any)
+const HomeHasilKonsultasiRoute = HomeHasilKonsultasiRouteImport.update({
+  id: '/hasil-konsultasi',
+  path: '/hasil-konsultasi',
+  getParentRoute: () => HomeRoute,
+} as any)
 const HomeProfilRoute = HomeProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
@@ -51,6 +58,11 @@ const HomeWoiiRoute = HomeWoiiRouteImport.update({
   id: '/woii',
   path: '/woii',
   getParentRoute: () => HomeRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -63,16 +75,20 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/hasil-konsultasi': typeof HomeHasilKonsultasiRoute
   '/profil': typeof HomeProfilRoute
   '/woii': typeof HomeWoiiRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/hasil-konsultasi': typeof HomeHasilKonsultasiRoute
   '/profil': typeof HomeProfilRoute
   '/woii': typeof HomeWoiiRoute
+  '/api/chat': typeof ApiChatRoute
   '/': typeof HomeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -82,26 +98,46 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
+  '/_home/hasil-konsultasi': typeof HomeHasilKonsultasiRoute
   '/_home/profil': typeof HomeProfilRoute
   '/_home/woii': typeof HomeWoiiRoute
+  '/api/chat': typeof ApiChatRoute
   '/_home/': typeof HomeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/chat' | '/login' | '/register' | '/profil' | '/woii' | '/api/auth/$'
+    | '/'
+    | '/chat'
+    | '/login'
+    | '/register'
+    | '/hasil-konsultasi'
+    | '/profil'
+    | '/woii'
+    | '/api/chat'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/chat' | '/login' | '/register' | '/profil' | '/woii' | '/' | '/api/auth/$'
+    | '/chat'
+    | '/login'
+    | '/register'
+    | '/hasil-konsultasi'
+    | '/profil'
+    | '/woii'
+    | '/api/chat'
+    | '/'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/_home'
     | '/chat'
     | '/(auth)/login'
     | '/(auth)/register'
+    | '/_home/hasil-konsultasi'
     | '/_home/profil'
     | '/_home/woii'
+    | '/api/chat'
     | '/_home/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -111,6 +147,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -151,6 +188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeIndexRouteImport
       parentRoute: typeof HomeRoute
     }
+    '/_home/hasil-konsultasi': {
+      id: '/_home/hasil-konsultasi'
+      path: '/hasil-konsultasi'
+      fullPath: '/hasil-konsultasi'
+      preLoaderRoute: typeof HomeHasilKonsultasiRouteImport
+      parentRoute: typeof HomeRoute
+    }
     '/_home/profil': {
       id: '/_home/profil'
       path: '/profil'
@@ -165,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeWoiiRouteImport
       parentRoute: typeof HomeRoute
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -176,12 +227,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface HomeRouteChildren {
+  HomeHasilKonsultasiRoute: typeof HomeHasilKonsultasiRoute
   HomeProfilRoute: typeof HomeProfilRoute
   HomeWoiiRoute: typeof HomeWoiiRoute
   HomeIndexRoute: typeof HomeIndexRoute
 }
 
 const HomeRouteChildren: HomeRouteChildren = {
+  HomeHasilKonsultasiRoute: HomeHasilKonsultasiRoute,
   HomeProfilRoute: HomeProfilRoute,
   HomeWoiiRoute: HomeWoiiRoute,
   HomeIndexRoute: HomeIndexRoute,
@@ -194,6 +247,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,6 +1,7 @@
 import { Agent } from '@anvia/core'
 import { PrismaMemoryStore } from '@anvia/memory-prisma'
 import { prisma } from '../prisma.ts'
+import { lensObserver } from './lens.ts'
 import { model } from './model.ts'
 import { BASE_INSTRUCTIONS } from './prompt.ts'
 import { createCatConsultationTools } from './tools/cat_consultation.ts'
@@ -24,6 +25,10 @@ export function createAssistantAgent(userId: string, sessionId: string) {
       saveConsultation,
     ],
     memory: { store: memoryStore, savePolicy: 'turn' },
+    observability: {
+      observers: { lens: lensObserver },
+      primaryTrace: 'lens',
+    },
     maxTurns: 6,
   })
 }

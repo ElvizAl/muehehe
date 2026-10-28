@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { createHttpClientTransport, messageText } from '@anvia/client'
+import type { UIMessage } from '@anvia/client'
+import { useChat } from '@anvia/react'
+import { StreamMarkdown } from '@anvia/react-ui/stream'
 import {
   Cat,
   Heart,
@@ -17,8 +21,18 @@ import {
 } from '#/components/ui/sheet'
 import { ChatSidebar } from './chat-sidebar'
 import { ChatComposer } from './chat-composer'
+import { ToolActivity } from './tool-activity'
+import { loadChatConversation } from '../chat-history.api'
 
-type Conversation = { id: string; title: string; messages: Array<string> }
+type Conversation = {
+  id: string
+  title: string
+  messages: ReadonlyArray<UIMessage>
+}
+const transport = createHttpClientTransport({
+  endpoint: '/api/chat',
+  format: 'jsonl',
+})
 const topics = [
   {
     icon: Heart,
@@ -40,44 +54,84 @@ const topics = [
   },
 ]
 
-export function ChatPage({ name }: { name: string }) {
+export function ChatPage({
+  name,
+  initialConversations,
+}: {
+  name: string
+  initialConversations: Array<{ id: string; title: string }>
+}) {
+  const chat = useChat({ transport })
   const [sidebar, setSidebar] = useState(true)
   const [mobile, setMobile] = useState(false)
-  const [conversations, setConversations] = useState<Array<Conversation>>([])
+  const [conversations, setConversations] = useState<Array<Conversation>>(() =>
+    initialConversations.map((item) => ({ ...item, messages: [] })),
+  )
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [historyError, setHistoryError] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState({ text: '', key: 0 })
   const bottom = useRef<HTMLDivElement>(null)
+  const loadSequence = useRef(0)
   const active = conversations.find((item) => item.id === activeId)
+  const busy = chat.status === 'submitted' || chat.status === 'streaming'
+  const locked = busy || loadingId !== null
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [activeId, active?.messages.length])
+  }, [activeId, chat.messages])
+  useEffect(() => {
+    if (!activeId) return
+    setConversations((items) =>
+      items.map((item) =>
+        item.id === activeId ? { ...item, messages: chat.messages } : item,
+      ),
+    )
+  }, [activeId, chat.messages])
   function newChat() {
+    if (busy) return
+    loadSequence.current += 1
+    setLoadingId(null)
+    setHistoryError(null)
+    chat.reset()
     setActiveId(null)
     setSuggestion((prev) => ({ text: '', key: prev.key + 1 }))
     setMobile(false)
   }
-  function selectChat(id: string) {
-    setActiveId(id)
-    setSuggestion((prev) => ({ text: '', key: prev.key + 1 }))
-    setMobile(false)
+  async function selectChat(id: string) {
+    if (busy) return
+    const selected = conversations.find((item) => item.id === id)
+    if (!selected) return
+    const sequence = ++loadSequence.current
+    setLoadingId(id)
+    setHistoryError(null)
+    try {
+      const messages = await loadChatConversation({ data: { id } })
+      if (sequence !== loadSequence.current) return
+      chat.setMessages(messages)
+      setActiveId(id)
+      setSuggestion((prev) => ({ text: '', key: prev.key + 1 }))
+      setMobile(false)
+    } catch {
+      if (sequence === loadSequence.current) {
+        setHistoryError('Percakapan gagal dimuat. Silakan coba lagi.')
+      }
+    } finally {
+      if (sequence === loadSequence.current) setLoadingId(null)
+    }
   }
   function send(message: string) {
-    if (activeId)
-      setConversations((items) =>
-        items.map((item) =>
-          item.id === activeId
-            ? { ...item, messages: [...item.messages, message] }
-            : item,
-        ),
-      )
-    else {
-      const id = crypto.randomUUID()
+    if (locked) return
+    setHistoryError(null)
+    const id = activeId ?? crypto.randomUUID()
+    if (!activeId) {
+      chat.reset()
       setConversations((items) => [
-        { id, title: message, messages: [message] },
+        { id, title: message, messages: [] },
         ...items,
       ])
       setActiveId(id)
     }
+    void chat.sendMessage({ text: message, metadata: { sessionId: id } })
   }
   const sidebarProps = {
     name,
@@ -85,6 +139,7 @@ export function ChatPage({ name }: { name: string }) {
     activeId,
     onSelect: selectChat,
     onNew: newChat,
+    loadingId,
   }
   return (
     <div className="flex h-dvh overflow-hidden bg-[#fcfbf7] font-sans text-[#253e32] selection:bg-[#718567]/25">
@@ -145,9 +200,15 @@ export function ChatPage({ name }: { name: string }) {
             >
               Profil kucing
             </Link>
+            <Link
+              to="/hasil-konsultasi"
+              className="rounded-full px-3 py-2.5 text-[#737a70] transition hover:text-[#284f3d] sm:px-5"
+            >
+              Hasil
+            </Link>
           </nav>
           <span className="hidden items-center gap-2 rounded-full border border-[#dce1d4] px-3 py-1.5 text-[10px] text-[#52684a] sm:flex">
-            <span className="size-1.5 rounded-full bg-[#718567]" /> DEMO
+            <span className="size-1.5 rounded-full bg-[#718567]" /> ONLINE
           </span>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-8">
@@ -175,7 +236,13 @@ export function ChatPage({ name }: { name: string }) {
                 key={suggestion.key}
                 initialMessage={suggestion.text}
                 onSend={send}
+                disabled={locked}
               />
+              {historyError && (
+                <p role="alert" className="mt-4 text-xs text-red-700">
+                  {historyError}
+                </p>
+              )}
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 {topics.map((topic) => (
                   <button
@@ -202,37 +269,81 @@ export function ChatPage({ name }: { name: string }) {
           ) : (
             <div className="mx-auto max-w-3xl py-8">
               <div className="mb-8 flex items-center gap-2 text-xs text-[#737a70]">
-                <Sparkles size={14} /> Percakapan demo
+                <Sparkles size={14} /> Konsultasi awal
               </div>
-              {active.messages.map((message, index) => (
-                <div key={`${active.id}-${index}`} className="mb-8">
-                  <div className="ml-auto max-w-[90%] rounded-3xl rounded-br-lg bg-[#e9ecdf] px-5 py-4 text-sm leading-7 whitespace-pre-wrap break-words">
-                    {message}
+              {chat.messages
+                .filter(
+                  (message) =>
+                    message.role === 'user' || message.role === 'assistant',
+                )
+                .map((message) => (
+                  <div key={message.id} className="mb-8">
+                    {message.role === 'user' ? (
+                      <div className="ml-auto max-w-[90%] rounded-3xl rounded-br-lg bg-[#e9ecdf] px-5 py-4 text-sm leading-7 whitespace-pre-wrap break-words">
+                        {messageText(message)}
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex items-start gap-3">
+                        <PawPrint
+                          size={20}
+                          className="mt-1 shrink-0 text-[#718567]"
+                        />
+                        <div className="min-w-0 max-w-xl">
+                          <ToolActivity parts={message.parts} />
+                          {messageText(message) && (
+                            <StreamMarkdown
+                              content={messageText(message)}
+                              live={busy}
+                              className="text-sm leading-7 text-[#253e32]"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-6 flex items-start gap-3">
-                    <PawPrint
-                      size={20}
-                      className="mt-1 shrink-0 text-[#718567]"
-                    />
-                    <p className="max-w-xl text-sm leading-7 text-[#737a70]">
-                      Ini pratinjau antarmuka AnabulCare. Pesanmu ditampilkan di
-                      sesi ini, tetapi belum dikirim ke AI. Jawaban konsultasi
-                      akan tersedia setelah layanan AI dihubungkan.
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              {busy && (
+                <p role="status" className="mb-5 text-xs text-[#737a70]">
+                  AnabulCare sedang menjawab…
+                </p>
+              )}
+              {chat.error && (
+                <p role="alert" className="mb-5 text-xs text-red-700">
+                  Gagal mengirim pesan: {chat.error.message}
+                </p>
+              )}
+              {historyError && (
+                <p role="alert" className="mb-5 text-xs text-red-700">
+                  {historyError}
+                </p>
+              )}
               <div ref={bottom} />
             </div>
           )}
         </div>
         {active && (
           <div className="mx-auto w-full max-w-[832px] px-5 pb-4 sm:px-8">
-            <ChatComposer key={`${activeId}-${suggestion.key}`} onSend={send} />
+            <div className="flex flex-col gap-2">
+              <ChatComposer
+                key={`${activeId}-${suggestion.key}`}
+                onSend={send}
+                disabled={locked}
+              />
+              {busy && (
+                <button
+                  type="button"
+                  onClick={chat.stop}
+                  className="self-end text-xs text-[#52684a] hover:underline"
+                >
+                  Hentikan jawaban
+                </button>
+              )}
+            </div>
           </div>
         )}
         <footer className="shrink-0 px-5 pb-5 text-center text-[10px] leading-5 text-[#737a70]">
-          Mode demo · Percakapan belum tersimpan permanen.
+          Percakapan tersimpan dan dapat dibuka kembali setelah halaman dimuat
+          ulang.
           <span className="mx-2 hidden sm:inline">·</span>
           <br className="sm:hidden" /> Dibuat dengan peduli, untuk kamu dan
           kucingmu.

@@ -15,9 +15,11 @@ type MessageInput = z.infer<typeof messageSchema>
 export function ChatComposer({
   onSend,
   initialMessage = '',
+  disabled = false,
 }: {
   onSend: (message: string) => void
   initialMessage?: string
+  disabled?: boolean
 }) {
   const {
     register,
@@ -41,6 +43,7 @@ export function ChatComposer({
     >
       <textarea
         {...register('message')}
+        disabled={disabled}
         aria-label="Pesan untuk AnabulCare"
         aria-invalid={!!errors.message}
         aria-describedby={errors.message ? 'message-error' : undefined}
@@ -73,7 +76,7 @@ export function ChatComposer({
         </span>
         <button
           type="submit"
-          disabled={!watch('message').trim()}
+          disabled={disabled || !watch('message').trim()}
           aria-label="Kirim pesan"
           className="flex size-10 items-center justify-center rounded-full bg-[#284f3d] text-white transition hover:bg-[#3c664e] disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#718567]"
         >

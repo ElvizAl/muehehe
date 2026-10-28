@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import {
   Cat,
   ChevronDown,
+  ClipboardList,
   LogOut,
   MessageCircle,
   PanelLeftClose,
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react'
 import { Menu } from '@base-ui/react/menu'
 import { useState } from 'react'
-import { authClient } from '#/modules/auth/auth.client'
+import { authClient } from '#/modules/auth/auth-browser'
 import { toast } from '#/components/ui/toast'
 
 export function ChatSidebar({
@@ -21,13 +22,15 @@ export function ChatSidebar({
   onSelect,
   onNew,
   onClose,
+  loadingId,
 }: {
   name: string
   conversations: Array<{ id: string; title: string }>
   activeId: string | null
-  onSelect: (id: string) => void
+  onSelect: (id: string) => void | Promise<void>
   onNew: () => void
   onClose: () => void
+  loadingId: string | null
 }) {
   const [search, setSearch] = useState('')
   const [signingOut, setSigningOut] = useState(false)
@@ -92,6 +95,13 @@ export function ChatSidebar({
         >
           <Cat size={18} /> Profil kucing
         </Link>
+        <Link
+          to="/hasil-konsultasi"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm hover:bg-[#e9ecdf]"
+        >
+          <ClipboardList size={18} /> Hasil konsultasi
+        </Link>
       </div>
       <div className="mt-8 min-h-0 flex-1 overflow-y-auto px-3">
         <p className="px-4 text-[10px] font-medium tracking-[0.15em] text-[#737a70]">
@@ -107,6 +117,9 @@ export function ChatSidebar({
             >
               <MessageCircle size={15} className="shrink-0" />
               <span className="truncate">{item.title}</span>
+              {loadingId === item.id && (
+                <span className="ml-auto text-[10px]">Memuat…</span>
+              )}
             </button>
           ))}
           {filtered.length === 0 && (
@@ -123,7 +136,7 @@ export function ChatSidebar({
           <PawPrint size={14} /> Ruang cerita si kecil
         </div>
         <p className="text-[11px] leading-5 text-[#737a70]">
-          Mode demo. Riwayat akan hilang saat halaman dimuat ulang.
+          Percakapan tersimpan dan bisa dibuka kembali.
         </p>
       </div>
       <Menu.Root>
